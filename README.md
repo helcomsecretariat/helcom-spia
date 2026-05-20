@@ -1,171 +1,110 @@
 # HELCOM SPIA (QGIS Plugin)
 
-HELCOM SPIA is a QGIS plugin for raster-based analysis of relationships between **Ecosystem Components (EC)** and **Pressures (P)** using a user-provided sensitivity score matrix.
+HELCOM SPIA is a QGIS plugin for raster-based analysis of relationships between **Ecosystem Components (EC)** and **Pressures (P)** using a user-defined sensitivity score matrix.
 
-It allows users to combine raster datasets, validate datasets, and generate interpretable spatial outputs for environmental analysis.
+It enables users to combine raster datasets, validate inputs, and generate spatial outputs for environmental analysis.
 
 ---
 
-## Key Features
+## 🚀 Key Features
 
 ### SPIA Processing Tools
 
-- **Impact index SUM tool — EC×P Weighted Sum**  
-  Computes the weighted sum of selected EC×P combinations using sensitivity scores.
-
-- **Impact index AVERAGE tool — EC×P Weighted Average**  
-  Computes the average of selected EC×P combinations using sensitivity scores.
-
-- **Pressure index SUM tool — Pressure Sum**  
-  Sums selected Pressure rasters.
-
-- **Pressure index weighted SUM tool — Weighted Pressure Sum**  
-  Computes the weighted sum of selected Pressure rasters using sensitivity scores.
+- **Impact index SUM tool** — EC×P weighted sum  
+- **Impact index AVERAGE tool** — EC×P weighted average  
+- **Pressure index SUM tool** — sum of selected Pressure rasters  
+- **Pressure index weighted SUM tool** — weighted sum of Pressure rasters  
 
 ---
 
 ### Smart Processing
 
-- Shared computation between tools (if more than pone tool is selected).
-- NoData handling - if any input rasters have NoData values in certains cells - final raster products get NoData values in those cells.
-- Progress bar and processing estimation time.
-- Safe cancellation support.
+- Shared computation between tools (improves performance)
+- NoData values handling - if any input rasters have NoData values in certains cells - final raster products get NoData values in those cells.
+- Progress bar with runtime estimate
+- Safe cancellation
 
 ---
 
 ### Validation
 
-- Checks raster availability.
-- Detects missing EC / P raster datasets.
-- Verifies:
-  - CRS
-  - Resolution
-  - Dimensions
-  - Extent
-  - Data type
+Checks raster datasets for:
+
+- Missing files  
+- CRS consistency  
+- Resolution  
+- Dimensions  
+- Extent  
+- Data type  
 
 ---
 
-## Workflow
+## ⚡ Quick Start
 
-The plugin guides users through a simple step-by-step process:
-
-1. Load EC×P score matrix (CSV)
-2. Select Ecosystem Components and Pressures
+1. Load EC×P sensitivity scores matrix (CSV)
+2. Select folders with Ecosystem Component and Pressure rasters
 3. Validate raster datasets
-4. Choose processing tools
+4. Select processing tools
 5. Run analysis
-6. Review outputs
+
+👉 For full step‑by‑step instructions:
+
+**See the User Guide: USER_GUIDE.md**
 
 ---
 
-## Installation
+## 📦 Installation
 
-### Install from ZIP
-
-1. Download plugin archive
+1. Download plugin ZIP from Releases. 
 2. Open QGIS
-3. Go to: Plugins → Manage and Install → Install from ZIP
+3. Go to:
+
+   Plugins → Manage and Install Plugins → Install from ZIP
+
 4. Select the plugin file
 
 ---
 
-## Input Data
+## 📁 Outputs
 
-### CSV Sensitivity scores matrix
+Results are saved in a timestamped folder: SPIA-results-YYYY-MM-DD-HH-MM-SS
+Outputs include:
 
-- First row → Pressure names  
-- First column → Ecosystem Component names  
-- Values → EC×P sensitivity scores  
-
-Example:
-
-|     | P1  | P2  |
-|-----|-----|-----|
-| EC1 | 0.7 | 1.5 |
-| EC2 | 0   | 2   |
+- Raster files (.tif)
+- Contribution matrix (.csv)
 
 ---
 
-### Raster Datasets
+## ⚙️ Requirements
 
-- One dataset per EC and P
-- Filename must match CSV labels
-- Format: .tif
-
-All rasters must share:
-
-- same CRS  
-- same resolution  
-- same extent  
-
----
-
-## Outputs
-
-All outputs are grouped into a timestamped result folder: SPIA-results-YYYY-MM-DD-HH-MM-SS
-
-### Output files
-
-- **Raster outputs (.tif)**
-  - Impact index SUM tool → Impact-index-SUM-YYYY-MM-DD-HH-MM-SS.tif
-  - Impact index AVERAGE tool → Impact-index-AVERAGE-YYYY-MM-DD-HH-MM-SS.tif
-  - Pressure index SUM tool → Pressure-index-SUM-YYYY-MM-DD-HH-MM-SS.tif
-  - Pressure index weighted SUM tool → Pressure-index-weighted-SUM-YYYY-MM-DD-HH-MM-SS.tif
-
-- **CSV output (.csv)**
-  - Shared between Impact index SUM tool and Impact index AVERAGE tool → Contribution-matrix-YYYY-MM-DD-HH-MM-SS.csv
-
----
-
-## Requirements
-
-- QGIS **3.28 or newer**
+- QGIS 3.28 or newer
 - Recommended:
   - ≥ 8 CPU cores  
   - ≥ 16 GB RAM  
 
 ---
 
-## Performance Notes
+## 📘 Documentation
 
-- Shared computation between tools (if more than pone tool is selected).
-- Runtime depends on:
-  - number of EC×P combinations
-  - raster size
-  - system performance
+👉 Detailed usage instructions and examples are available in:
+
+**USER_GUIDE.md**
 
 ---
 
-## Limitations
+## ⚠️ Notes
 
-- CPU-based processing (no GPU)
-- Very large rasters may require significant RAM
-- Cancellation is safe but may not be instant
-
----
-
-## Project Structure
-
-SPIA/
-main_dialog.py
-processing_task.py
-tools_engine.py
-raster_utils.py
-
-- **ToolsEngine** → raster computation logic  
-- **RasterProcessingTask** → background processing  
-- **MainDialog** → UI workflow  
-- **RasterUtils** → GDAL operations  
+- Processing can take from minutes to hours depending on amount of datasets and their size
+- Impact index SUM tool and Impact index AVERAGE tools share computation → faster when run together
 
 ---
 
-## License
+## 📄 License
 
-(Add your license here — MIT, GPL, etc.)
+(Add your license here)
 
 ---
 
-## Contact
+## 📧 Contact
 
-(Add your contact information)
+data@helcom.fi
