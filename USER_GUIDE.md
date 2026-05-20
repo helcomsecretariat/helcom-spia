@@ -36,7 +36,7 @@ This guide provides step‑by‑step instructions for installing and using the H
    Plugins → HELCOM SPIA
 3. The plugin dialog will open  
 
-📸 *(Insert screenshot: main plugin window)*
+![Plugin window](images/image1.png)
 
 ---
 
@@ -90,7 +90,7 @@ Optional:
 ✅ When at least one EC and one P are selected:
 - **Confirm selection** button becomes available
 
-📸 *(Insert screenshot: EC/P selection)*
+![EC/P selection](images/image2.png)
 
 ---
 
@@ -192,7 +192,7 @@ The plugin creates a timestamped folder:
 - Checked → rasters added automatically  
 - Unchecked → saved only to disk  
 
-📸 *(Insert screenshot: tool selection)*
+![Tool selection](images/image3.png)
 
 ---
 
