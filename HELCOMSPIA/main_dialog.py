@@ -894,7 +894,7 @@ class HELCOMSPIADialog(QDialog, FORM_CLASS):
         Open online user guide in browser.
         """
 
-        url = "https://github.com/helcomsecretariat/helcom-spia/blob/main/USER-GUIDE.pdf"
+        url = "https://github.com/helcomsecretariat/helcom-spia/blob/main/USER_GUIDE.md"
 
         webbrowser.open(url)
 
