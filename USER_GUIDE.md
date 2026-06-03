@@ -12,7 +12,8 @@ This guide provides step‑by‑step instructions for installing and using the H
    https://github.com/helcomsecretariat/helcom-spia
 
 2. Download the plugin from **Releases**:
-   Releases → HELCOMSPIA.zip
+   - Find latest release
+   - Download HELCOMSPIA.zip
    
    ⚠️ Do NOT use *Code → Download ZIP* (it will not install properly in QGIS)
 
