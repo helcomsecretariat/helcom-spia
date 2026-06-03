@@ -1,7 +1,7 @@
 [general]
 name=HELCOM SPIA
 qgisMinimumVersion=3.28
-version=1.0.0
+version=1.1.0
 author=Andžej Miloš
 email=andzej.milos@helcom.fi
 
@@ -12,9 +12,9 @@ about=HELCOM SPIA plugin provides tools for analyzing relationships between Ecos
 category=Analysis
 icon=icon.png
 
-homepage=https://github.com/yourname/ecp-raster-analysis
-tracker=https://github.com/yourname/ecp-raster-analysis/issues
-repository=https://github.com/yourname/ecp-raster-analysis
+homepage=https://github.com/helcomsecretariat/helcom-spia
+tracker=https://github.com/helcomsecretariat/helcom-spia/issues
+repository=https://github.com/helcomsecretariat/helcom-spia
 
 tags=raster,analysis,ecosystem,pressure,ec,p,gis
 
