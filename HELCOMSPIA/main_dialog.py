@@ -206,9 +206,36 @@ class HELCOMSPIADialog(QDialog, FORM_CLASS):
 
         self.clear_lists()
 
-        with open(csv_path, newline='', encoding='utf-8') as f:
-            reader = csv.reader(f)
-            rows = list(reader)
+        
+        encodings_to_try = ['utf-8', 'utf-8-sig', 'cp1252', 'latin1']
+        file_content = None
+        used_encoding = None
+        
+        
+        for enc in encodings_to_try:
+            try:
+                with open(csv_path, 'r', encoding=enc) as f:
+                    file_content = f.read()
+                    used_encoding = enc
+                    break
+            except UnicodeDecodeError:
+                continue
+
+        if file_content is None:
+            self.show_status_message("❌ Could not read CSV file.", "error")
+            error_msg = "❌ Could not read CSV file.\n\nSupported encodings tried:\n- UTF-8\n- UTF-8 (with BOM)\n- Windows-1252\n- Latin-1"
+            self.selectionOutput.setPlainText(error_msg)
+            return
+        
+        try:
+            sample = file_content[:2048]
+            dialect = csv.Sniffer().sniff(sample)
+            delimiter = dialect.delimiter
+        except Exception:
+            delimiter = ','  # fallback
+
+
+        rows = list(csv.reader(file_content.splitlines(), delimiter=delimiter))
 
         # First row (excluding first column) contains P names
         p_names = [name.strip() for name in rows[0][1:]]
@@ -753,6 +780,8 @@ class HELCOMSPIADialog(QDialog, FORM_CLASS):
         
         #self.processingStatusLabel.setText("Running selected tools…")
         self.processingProgressBar.setValue(0)
+        
+        self.save_intermediate = self.saveIntermediateCheckBox.isChecked()
 
         self.big_step1.hide()
         self.big_step2.hide()
@@ -770,6 +799,7 @@ class HELCOMSPIADialog(QDialog, FORM_CLASS):
             p_folder=self.pFolderLineEdit.text().strip(),
             score_matrix_path=self.csvPathLineEdit.text().strip(),
             output_folder=output_folder,
+            save_intermediate=self.save_intermediate,
             callback_finished=self.on_tools_finished
         )
         
@@ -806,7 +836,9 @@ class HELCOMSPIADialog(QDialog, FORM_CLASS):
             if self.add_results_to_map and outputs:
                 for tool, result in outputs.items():
                     for key, path in result.items():
-                        if path.lower().endswith(".tif") and os.path.exists(path):
+                        if key == "intermediate":
+                                continue
+                        if isinstance(path, str) and path.lower().endswith(".tif") and os.path.exists(path):
                             layer_name = f"{os.path.basename(path)}"
                             layer = QgsRasterLayer(path, layer_name)
 
@@ -823,13 +855,25 @@ class HELCOMSPIADialog(QDialog, FORM_CLASS):
         # Show logs in summary output box
         self.selectionOutput.setPlainText("\n".join(logs))
         
-        # Optionally list output files
         if success:
             self.selectionOutput.append("\nGenerated output files:")
+            shown_intermediate = False
             for tool, result in outputs.items():
                 self.selectionOutput.append(f"\n{self.tool_labels[tool]}:")
                 for key, path in result.items():
-                    self.selectionOutput.append(f"  • {key}: {path}")
+                    if key != "intermediate":
+                        self.selectionOutput.append(f"  • {key}: {path}")
+                        
+                if not shown_intermediate and "intermediate" in result:
+                    info = result["intermediate"]
+
+                    if info and info["count"] > 0:
+                        self.selectionOutput.append("\nIntermediate impact rasters:")
+                        self.selectionOutput.append(f" • folder: {info['folder']}")
+                        self.selectionOutput.append(f" • count: {info['count']}")
+
+                    shown_intermediate = True
+
                     
         self.btnStartOver.show()
         self.btnCancelProcessing.hide()

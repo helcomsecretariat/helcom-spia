@@ -354,6 +354,17 @@
         </item>
 		
 		
+		<item>
+		  <widget class="QCheckBox" name="saveIntermediateCheckBox">
+			<property name="text">
+			  <string>Save intermediate impact rasters (EC × P × score)</string>
+			</property>
+			<property name="checked">
+			  <bool>false</bool>
+			</property>
+		  </widget>
+		</item>
+
 		<!-- Add results to QGIS map -->
 		<item>
 		  <widget class="QCheckBox" name="addResultsToMapCheckBox">

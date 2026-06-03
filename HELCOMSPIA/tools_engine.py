@@ -23,6 +23,7 @@ class ToolsEngine:
                  ec_folder,
                  p_folder,
                  score_matrix_path,
+                 save_intermediate,
                  output_folder):
 
         # Trim labels (safe for score matrix indexing)
@@ -36,9 +37,15 @@ class ToolsEngine:
         self.utils = RasterUtils()
         self.utils.load_score_matrix(score_matrix_path)
         
+        self.save_intermediate = save_intermediate
+        
         self.run_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         self.output_folder = os.path.join(output_folder, f"SPIA-results-{self.run_timestamp}")
         os.makedirs(self.output_folder, exist_ok=True)
+             
+        self.intermediate_count = 0
+        self.intermediate_folder = None
+
         
         
     def compute_ec_p_core(self, progress_callback=None, cancel_callback=None):
@@ -84,7 +91,26 @@ class ToolsEngine:
                     ec_arr, ec_mask,
                     p_arr, p_mask,
                     score
-                )
+                )                
+                
+                if self.save_intermediate:
+                                        
+                    if self.intermediate_folder is None:
+                        self.intermediate_folder = os.path.join(self.output_folder, "intermediate")
+                        os.makedirs(self.intermediate_folder, exist_ok=True)
+
+                    # Create safe file name
+                    ec_name = ec.replace(" ", "_").replace("/", "_")
+                    p_name = p.replace(" ", "_").replace("/", "_")
+
+                    filename = f"EC_{ec_name}__P_{p_name}_{self.run_timestamp}.tif"
+                    intermediate_folder = os.path.join(self.output_folder, "intermediate")
+                    os.makedirs(intermediate_folder, exist_ok=True)
+                    filepath = os.path.join(intermediate_folder, filename)
+
+                    self.utils.write_tif(tmp, filepath)
+                    
+                    self.intermediate_count += 1
 
                 # CSV
                 csv_matrix[ei, pj] = np.nansum(tmp, dtype=np.float64)
@@ -111,7 +137,9 @@ class ToolsEngine:
             "csv_matrix": csv_matrix,
             "sum_array": sum_array,
             "sum_mask": sum_mask,
-            "total_pairs": total_pairs
+            "total_pairs": total_pairs,
+            "intermediate_count": self.intermediate_count,
+            "intermediate_folder": self.intermediate_folder
         }
         
     def write_common_csv(self, core_result):

@@ -22,6 +22,7 @@ class RasterProcessingTask(QgsTask):
                  p_folder,
                  score_matrix_path,
                  output_folder,
+                 save_intermediate=False,
                  callback_finished=None):
         super().__init__(description, QgsTask.CanCancel)
 
@@ -32,6 +33,7 @@ class RasterProcessingTask(QgsTask):
         self.p_folder = p_folder
         self.score_matrix_path = score_matrix_path
         self.output_folder = output_folder
+        self.save_intermediate = save_intermediate
         self.callback_finished = callback_finished
 
         # To collect tool outputs (csv paths, tif paths)
@@ -73,6 +75,7 @@ class RasterProcessingTask(QgsTask):
                 self.ec_folder,
                 self.p_folder,
                 self.score_matrix_path,
+                self.save_intermediate,
                 self.output_folder
             )
 
@@ -93,6 +96,11 @@ class RasterProcessingTask(QgsTask):
                     progress_callback=cb_core,
                     cancel_callback=self._is_cancelled
                 )
+                                
+                intermediate_info = {
+                    "count": core_result.get("intermediate_count", 0),
+                    "folder": core_result.get("intermediate_folder", None)
+                }
 
                 if core_result is None:
                     self.logMessage.emit("⚠ Processing cancelled.")
@@ -105,12 +113,14 @@ class RasterProcessingTask(QgsTask):
                 if "Tool1" in self.selected_tools:
                     out1 = engine.run_tool1(core_result)
                     out1["csv"] = csv_path
+                    out1["intermediate"] = intermediate_info
                     self.tool_outputs["Tool1"] = out1
 
                 # TOOL 2
                 if "Tool2" in self.selected_tools:
                     out2 = engine.run_tool2(core_result)
                     out2["csv"] = csv_path
+                    out2["intermediate"] = intermediate_info
                     self.tool_outputs["Tool2"] = out2
 
                 base += tool_weight
