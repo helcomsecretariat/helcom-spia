@@ -55,7 +55,7 @@ Checks raster datasets for:
 
 ## 📦 Installation
 
-1. Download plugin ZIP from Releases. 
+1. Download plugin ZIP from Releases (use latest release). 
 2. Open QGIS
 3. Go to:
 
