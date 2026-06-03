@@ -47,7 +47,7 @@ The plugin follows a structured workflow:
 1. Load EC×P sensitivity matrix (CSV)
 2. Select Ecosystem Component (EC) and Pressure (P) raster folders
 3. Validate raster datasets
-4. Select tools and output folder
+4. Select tools, options and output folder
 5. Run analysis
 6. Review outputs
 
@@ -77,9 +77,34 @@ Example:
 
 ---
 
+#### Delimiter
+
+The plugin **automatically detects the delimiter** and supports following:
+- comma `,`
+- semicolon `;`
+- or tab
+
+---
+
+#### Encoding
+
+The plugin **automatically detects encoding** and supports following:
+- UTF‑8
+- UTF‑8 with BOM
+- Windows‑1252 (Excel default)
+- Latin‑1
+
+---
+
+#### Important notes
+
+- The first cell (top-left) can be empty
+- Names must match raster filenames (without `.tif`)
+- Avoid duplicate EC or P names
+
 ## ✅ Step 2 — Select ECs and Ps
 
-- Select checkboxes for:
+Select checkboxes for:
 - Ecosystem Components
 - Pressures
 
@@ -87,7 +112,7 @@ Optional:
 - Use search fields to filter
 - Use **Select All / Deselect All**
 
-✅ When at least one EC and one P are selected:
+When at least one EC and one P are selected:
 - **Confirm selection** button becomes available
 
 ![EC/P selection](images/image2.png)
@@ -107,7 +132,6 @@ Click:
 ## ✅ Step 4 — Select raster folders
 
 You must choose:
-
 - Folder containing EC rasters  
 - Folder containing P rasters  
 
@@ -165,34 +189,30 @@ Each tool produces a different type of output raster.
 
 ---
 
-### Output structure
-
-The plugin creates a timestamped folder:
-   SPIA-results-YYYY-MM-DD-HH-MM-SS
-
----
-
-### Outputs
-
-| Tool | Output raster | CSV |
-|-----|--------------|-----|
-| Impact index SUM | Impact-index-SUM-*.tif | ✅ |
-| Impact index AVERAGE | Impact-index-AVERAGE-*.tif | ✅ |
-| Pressure index SUM | Pressure-index-SUM-*.tif | |
-| Pressure index weighted SUM | Pressure-index-weighted-SUM-*.tif | |
-
-✅ CSV is shared by SUM and AVERAGE tools
-
----
-
-### Optional setting
+#### Optional settings
 
 ✅ **Add result rasters to the QGIS map**
-
 - Checked → rasters added automatically  
 - Unchecked → saved only to disk  
 
+✅ **Save intermediate impact rasters (EC × P × score)**
+
+- Checked → all intermediate impact EC×P rasters will be saved  
+- Unchecked → only final results are saved  
+
+⚠️ Warning:
+- This option can generate **a very large number of files**
+- Processing time and disk usage may increase significantly  
+
+---
+
 ![Tool selection](images/image3.png)
+
+---
+
+#### Output structure
+
+The plugin creates a timestamped folder SPIA-results-YYYY-MM-DD-HH-MM-SS in the selected output folder
 
 ---
 
@@ -235,56 +255,152 @@ All outputs are saved in:
 
 ## Raster outputs
 
-- Impact index SUM  
-- Impact index AVERAGE  
-- Pressure index SUM  
-- Weighted Pressure index  
+- Impact index SUM tool - Impact-index-SUM-YYYY-MM-DD-HH-MM-SS.tif
+- Impact index AVERAGE tool - Impact-index-AVERAGE-YYYY-MM-DD-HH-MM-SS.tif 
+- Pressure index SUM tool - Pressure-index-SUM-YYYY-MM-DD-HH-MM-SS.tif
+- Weighted Pressure index - Pressure-index-weighted-SUM-YYYY-MM-DD-HH-MM-SS.tif
 
 ---
 
 ## CSV output
 
-- Contribution matrix  
-- Shared between Impact index SUM and Impact index AVERAGE tools  
+- Contribution matrix - Contribution-matrix-YYYY-MM-DD-HH-MM-SS.csv
+- Shared between Impact index SUM and Impact index AVERAGE tools
+
+---
+
+## Intermediate rasters (optional, if enabled)
+
+/intermediate/ foldercontains:
+- raster for each EC × P × score combination - EC_name_P_name_YYYY-MM-DD-HH-MM-SS.tif
 
 ---
 
 # ⏱ 7. Performance Tips
 
 - Tools Impact index SUM and Impact index AVERAGE share computation → faster together  
-- Many and large datasets may take hours  
+- Many and large datasets may take hours
+  Saving intermediate rasters increases runtime 
 - Consider running long jobs overnight  
 
 ---
 
-# ⚠️ 8. Common Issues
+## ⚠️ 8. Errors and Warnings
 
-### No rasters found
-- Check folder paths  
-- Ensure filenames match CSV labels  
+This section describes common issues and how to resolve them.
 
 ---
 
-### Validation fails
-- Ensure rasters share:
-  - CRS
-  - resolution
-  - extent  
+### ❌ Could not read CSV file
+
+**Cause:**
+- Unsupported encoding  
+- Corrupt CSV  
+
+**Solution:**
+- Open CSV in Excel or text editor  
+- Save as **UTF‑8 CSV**  
+- Try again  
 
 ---
 
-### Processing is slow
-- Reduce number of ECs / Ps  
-- Test with smaller datasets  
+### ❌ Invalid CSV structure
+
+**Cause:**
+- Missing header row or column  
+- Empty or malformed file  
+
+**Solution:**
+- Ensure:
+  - first row = Pressures  
+  - first column = ECs  
+  - data cells contain numbers  
 
 ---
 
+### ⚠️ Missing raster files
+
+**Cause:**
+- Raster files not found in selected folder  
+
+**Solution:**
+- Check:
+  - correct folder selected  
+  - filenames match EC/P names  
+
+---
+
+### ❌ No matching rasters
+
+**Cause:**
+- None of selected EC/P rasters found  
+
+**Solution:**
+- Verify file names and paths  
+- Ensure `.tif` format  
+
+---
+
+### ⚠️ Validation warnings
+
+**Cause:**
+- Minor differences in rasters  
+
+Examples:
+- slightly different resolution  
+- metadata inconsistencies  
+
+**Solution:**
+- Recommended: fix rasters if possible  
+- Otherwise: proceed with caution  
+
+---
+
+### ❌ Critical validation errors
+
+**Cause:**
+- Different CRS  
+- Different raster extents  
+- Different dimensions  
+
+**Solution:**
+- Reproject or align rasters  
+- Use QGIS tools:
+  - Warp (reproject)  
+  - Align rasters  
+
+---
+
+### ⚠️ Very large number of intermediate rasters
+
+**Cause:**
+- Many EC × P combinations  
+
+**Solution:**
+- Disable "Save intermediate rasters"  
+- Reduce number of EC/P selections  
+
+---
+
+### ⚠️ Processing is slow
+
+**Cause:**
+- Large rasters  
+- Many EC/P combinations  
+
+**Solution:**
+- Reduce inputs  
+- Use smaller test datasets  
+- Run overnight  
+
+---
 # ✅ 9. Best Practices
 
 - Start with small datasets  
 - Validate inputs before running  
-- Use timestamped outputs for comparison  
-- Keep naming consistent  
+- Compare outputs using timestamps
+- Enable intermediate rasters only when necessary
+- Use consistent naming  
 
 ---
 
