@@ -22,6 +22,7 @@ class RasterProcessingTask(QgsTask):
                  p_folder,
                  score_matrix_path,
                  output_folder,
+                 csv_delimiter=',',
                  save_intermediate=False,
                  callback_finished=None):
         super().__init__(description, QgsTask.CanCancel)
@@ -32,6 +33,7 @@ class RasterProcessingTask(QgsTask):
         self.ec_folder = ec_folder
         self.p_folder = p_folder
         self.score_matrix_path = score_matrix_path
+        self.csv_delimiter = csv_delimiter
         self.output_folder = output_folder
         self.save_intermediate = save_intermediate
         self.callback_finished = callback_finished
@@ -75,6 +77,7 @@ class RasterProcessingTask(QgsTask):
                 self.ec_folder,
                 self.p_folder,
                 self.score_matrix_path,
+                self.csv_delimiter,
                 self.save_intermediate,
                 self.output_folder
             )

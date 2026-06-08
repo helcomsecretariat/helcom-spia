@@ -236,6 +236,7 @@ class HELCOMSPIADialog(QDialog, FORM_CLASS):
 
 
         rows = list(csv.reader(file_content.splitlines(), delimiter=delimiter))
+        self.csv_delimiter = delimiter
 
         # First row (excluding first column) contains P names
         p_names = [name.strip() for name in rows[0][1:]]
@@ -799,6 +800,7 @@ class HELCOMSPIADialog(QDialog, FORM_CLASS):
             p_folder=self.pFolderLineEdit.text().strip(),
             score_matrix_path=self.csvPathLineEdit.text().strip(),
             output_folder=output_folder,
+            csv_delimiter=self.csv_delimiter,
             save_intermediate=self.save_intermediate,
             callback_finished=self.on_tools_finished
         )

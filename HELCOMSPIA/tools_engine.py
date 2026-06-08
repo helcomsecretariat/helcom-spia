@@ -23,6 +23,7 @@ class ToolsEngine:
                  ec_folder,
                  p_folder,
                  score_matrix_path,
+                 csv_delimiter,
                  save_intermediate,
                  output_folder):
 
@@ -32,10 +33,10 @@ class ToolsEngine:
 
         self.ec_folder = ec_folder
         self.p_folder = p_folder
-
+        
         # Raster utilities (float32 + NaN safe)
         self.utils = RasterUtils()
-        self.utils.load_score_matrix(score_matrix_path)
+        self.utils.load_score_matrix(score_matrix_path, csv_delimiter)
         
         self.save_intermediate = save_intermediate
         

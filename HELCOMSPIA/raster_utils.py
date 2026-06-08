@@ -33,8 +33,8 @@ class RasterUtils:
     # ----------------------------------------------------------------------
     # SCORE MATRIX
     # ----------------------------------------------------------------------
-    def load_score_matrix(self, csv_path):
-        df = pd.read_csv(csv_path, index_col=0)
+    def load_score_matrix(self, csv_path, delimiter):
+        df = pd.read_csv(csv_path, index_col=0, delimiter=delimiter)
 
         # Trim whitespace (critical!)
         df.index = df.index.str.strip()
