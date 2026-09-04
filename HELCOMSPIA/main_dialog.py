@@ -1,5 +1,5 @@
 import csv
-from PyQt5.QtWidgets import QDialog, QFileDialog, QCheckBox, QSpacerItem, QSizePolicy, QMessageBox
+from PyQt5.QtWidgets import QDialog, QFileDialog, QCheckBox, QSpacerItem, QSizePolicy, QMessageBox, QVBoxLayout, QTextEdit, QPushButton, QHBoxLayout, QLabel
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QIcon
 from pathlib import Path
@@ -421,6 +421,45 @@ class HELCOMSPIADialog(QDialog, FORM_CLASS):
             self.pFolderLineEdit.setText(folder)
             self.p_folder = folder
             
+        #added this line - for scrollable dialog box        
+    def show_missing_rasters_dialog(self, log_text):
+        """
+        Show scrollable dialog listing missing rasters.
+        Returns True if user chooses to proceed.
+        """
+
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Missing raster files")
+        dlg.resize(700, 500)
+    
+        layout = QVBoxLayout(dlg)
+
+        label = QLabel(
+        "Some raster files are missing.\n\nProceed with available rasters?"
+        )
+        layout.addWidget(label)
+
+        text = QTextEdit()
+        text.setReadOnly(True)
+        text.setPlainText(log_text)
+        layout.addWidget(text)
+
+        button_layout = QHBoxLayout()
+
+        btn_proceed = QPushButton("Proceed")
+        btn_cancel = QPushButton("Cancel")
+
+        btn_proceed.clicked.connect(dlg.accept)
+        btn_cancel.clicked.connect(dlg.reject)
+
+        button_layout.addStretch()
+        button_layout.addWidget(btn_proceed)
+        button_layout.addWidget(btn_cancel)
+
+        layout.addLayout(button_layout)
+
+        return dlg.exec_() == QDialog.Accepted
+            
     def run_full_validation(self):
         """
         Combined validation pipeline:
@@ -486,15 +525,11 @@ class HELCOMSPIADialog(QDialog, FORM_CLASS):
             self.show_status_message("⚠ Missing rasters detected.", "error")
 
             # Ask user
-            proceed = QMessageBox.question(
-                self,
-                "Missing raster files",
-                "\n".join(log) + "\n\nProceed with available rasters?",
-                QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.No
+            proceed = self.show_missing_rasters_dialog(
+                "\n".join(log)
             )
 
-            if proceed == QMessageBox.No:
+            if not proceed:
                 self.show_status_message("❌ Validation cancelled.", "error")
                 return
 
