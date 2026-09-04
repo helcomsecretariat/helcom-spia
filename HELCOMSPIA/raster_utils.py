@@ -44,7 +44,19 @@ class RasterUtils:
         return df
 
     def get_score(self, ec_label, p_label):
-        return float(self.score_df.loc[ec_label.strip(), p_label.strip()])
+        value = self.score_df.loc[ec_label.strip(),p_label.strip()]
+        #return float(self.score_df.loc[ec_label.strip(), p_label.strip()])
+        print("EC:", ec_label)
+        print("P:", p_label)
+        print("TYPE:", type(value))
+        print(value)
+        
+        if hasattr(value, "iloc"):
+            value = value.iloc[0]
+        if pd.isna(value):
+            return np.nan
+        return float(value)
+    
 
     # ----------------------------------------------------------------------
     # RASTER LOADING WITH SAFE NODATA HANDLING
@@ -149,7 +161,12 @@ class RasterUtils:
         band = ds.GetRasterBand(1)
         band.WriteArray(array_float32.astype(np.float32))
         band.SetNoDataValue(np.nan)
+        
+        #compute statistics
+        band.ComputeStatistics(False)
+        
         band.FlushCache()
+        ds.FlushCache()
         ds = None
 
     def write_csv_matrix(self, csv_path, ec_labels, p_labels, matrix_2d):
