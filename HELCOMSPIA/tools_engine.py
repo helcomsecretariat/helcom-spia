@@ -11,7 +11,9 @@ class ToolsEngine:
       - EC/P rasters loaded as float32 arrays + boolean masks (from Module 1e)
       - EC*P*score temporary arrays computed in float32
       - CSV sums computed in float64 (np.nansum)
-      - Strict NoData propagation (if ANY invalid → result = NaN)
+      - Strict NoData propagation (if ANY invalid → result = NaN) 
+            -  This above calculation is changed such that No data strict is removed. Now the calculation sum up rasters such that if NA present it skips/na=0 and calculates for other pixels
+            and for the average, the pixels with only values are averaged NA is ignored. 
       - Final GeoTIFF saved as float32 with NaN preserved
 
     This module is fully synchronized with raster_utils Module 1e.
@@ -69,7 +71,8 @@ class ToolsEngine:
         )
 
         sum_array = None
-        sum_mask = None
+        #sum_mask = None
+        count_array = None
 
         pair = 0
 
@@ -116,28 +119,40 @@ class ToolsEngine:
                 # CSV
                 csv_matrix[ei, pj] = np.nansum(tmp, dtype=np.float64)
 
-                # Sum accumulation
+                # Sum accumulation - corrected line - removed the strict Nan rule
+                #and changed such that nan is skipped while calculation continues for other pixels-
                 if sum_array is None:
-                    sum_array = tmp.copy()
-                    sum_mask = tmp_mask.copy()
+                    #sum_array = tmp.copy()
+                    sum_array = np.nan_to_num(tmp, nan=0.0).astype(np.float32)
+                    count_array = tmp_mask.astype(np.int32)
+                    #sum_mask = tmp_mask.copy()
                 else:
-                    valid = sum_mask & tmp_mask
-                    sum_array = np.where(
-                        valid,
-                        np.nan_to_num(sum_array) + np.nan_to_num(tmp),
-                        np.nan
+                    #valid = sum_mask & tmp_mask
+                    sum_array = (
+                        np.nan_to_num(sum_array, nan=0.0) +
+                        np.nan_to_num(tmp, nan= 0.0)
                     ).astype(np.float32)
-                    sum_mask = valid
+
+                    count_array += tmp_mask.astype(np.int32)
+                    
 
                 pair += 1
+                
 
                 if progress_callback:
                     progress_callback(100 * pair / total_pairs)
 
+        sum_array=np.where(
+                    count_array>0,
+                    sum_array,
+                    np.nan
+                ).astype(np.float32)
+
         return {
             "csv_matrix": csv_matrix,
             "sum_array": sum_array,
-            "sum_mask": sum_mask,
+            #"sum_mask": sum_mask,
+            "count_array": count_array,
             "total_pairs": total_pairs,
             "intermediate_count": self.intermediate_count,
             "intermediate_folder": self.intermediate_folder
@@ -169,14 +184,18 @@ class ToolsEngine:
         """
         Tool 2: average = sum / total_pairs
         """
+        # also modifying here such that the average is done excluding the NA pixel count.
 
         sum_array = core_result["sum_array"]
-        total_pairs = core_result["total_pairs"]
+        #total_pairs = core_result["total_pairs"]
+        count_array = core_result["count_array"]
 
         avg_array = np.where(
-            np.isnan(sum_array),
-            np.nan,
-            sum_array / float(total_pairs)
+            #np.isnan(sum_array),
+            count_array>0,
+            sum_array/count_array,
+            np.nan
+            #sum_array / float(total_pairs)
         ).astype(np.float32)
 
         tif_path = os.path.join(self.output_folder, f"Impact-index-AVERAGE-{self.run_timestamp}.tif")
@@ -189,7 +208,8 @@ class ToolsEngine:
             raise RuntimeError("No Pressures selected for Pressure index SUM tool.")
 
         sum_array = None
-        sum_mask  = None
+        #sum_mask  = None
+        count_array = None
 
         for i, p in enumerate(self.p_labels):
             if cancel_callback and cancel_callback():
@@ -197,19 +217,26 @@ class ToolsEngine:
             p_arr, p_mask = self.utils.get_p_array(p, self.p_folder)
 
             if sum_array is None:
-                sum_array = p_arr.copy()
-                sum_mask  = p_mask.copy()
+                sum_array = np.nan_to_num(p_arr,nan=0.0).astype(np.float32)
+                count_array = p_mask.astype(np.int32)                          
+                #sum_mask  = p_mask.copy()
             else:
-                valid = sum_mask & p_mask
-                sum_array = np.where(
-                    valid,
-                    np.nan_to_num(sum_array) + np.nan_to_num(p_arr),
-                    np.nan
-                ).astype(np.float32)
-                sum_mask = valid
+                #valid = sum_mask & p_mask
+                sum_array = (np.nan_to_num(sum_array, nan=0.0)+
+                            np.nan_to_num(p_arr, nan=0.0)).astype(np.float32)
+
+                count_array+= p_mask.astype(np.int32)
 
             if progress_callback:
                 progress_callback(100 * (i + 1) / len(self.p_labels))
+
+        if sum_array is None:
+            return None
+
+        sum_array = np.where(
+            count_array >0,
+            sum_array,
+            np.nan).astype(np.float32)
 
         tif_path = os.path.join(self.output_folder, f"Pressure-index-SUM-{self.run_timestamp}.tif")
         self.utils.write_tif(sum_array, tif_path)
@@ -228,7 +255,8 @@ class ToolsEngine:
             raise RuntimeError("Pressure index weighted SUM tool requires Ecosystem components to compute average scores.")
 
         sum_array = None
-        sum_mask  = None
+        #sum_mask  = None
+        count_array = None
 
         for i, p in enumerate(self.p_labels):
             if cancel_callback and cancel_callback():
@@ -242,19 +270,30 @@ class ToolsEngine:
             weighted = (p_arr * avg_score).astype(np.float32)
 
             if sum_array is None:
-                sum_array = weighted.copy()
-                sum_mask  = p_mask.copy()
+                sum_array = np.nan_to_num(weighted,
+                                          nan=0.0).astype(np.float32)
+                
+                #sum_mask  = p_mask.copy()
+
+                count_array = p_mask.astype(np.int32)
             else:
-                valid = sum_mask & p_mask
-                sum_array = np.where(
-                    valid,
-                    np.nan_to_num(sum_array) + np.nan_to_num(weighted),
-                    np.nan
-                ).astype(np.float32)
-                sum_mask = valid
+                #valid = sum_mask & p_mask
+                sum_array = (np.nan_to_num(sum_array, nan=0.0)
+                            + np.nan_to_num(weighted, nan= 0.0)
+                            ).astype(np.float32)
+                #sum_mask = valid
+                count_array += p_mask.astype(np.int32)
 
             if progress_callback:
                 progress_callback(100 * (i + 1) / len(self.p_labels))
+
+        if sum_array is None:
+            return None
+
+        sum_array = np.where(
+            count_array>0,
+            sum_array,
+            np.nan).astype(np.float32)
 
         tif_path = os.path.join(self.output_folder, f"Pressure-index-weighted-SUM-{self.run_timestamp}.tif")
         self.utils.write_tif(sum_array, tif_path)
